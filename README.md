@@ -1,4 +1,4 @@
-# flask-tiny-app11
+# flask-tiny-app
 A minimal Flask app
 ## Nhóm: Vương - Trung
  Tên sv1: Nguyễn Trường Vương
