@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head><title>Blog</title></head>
+<body>
+    <h1>Blog</h1>
+    {% for blog in blogs %}
+        <h2>{{ blog.title }}</h2>
+        <p>{{ blog.content }}</p>
+    {% endfor %}
+    <p><a href="/todo">Chuyển đến To-do List</a></p>
+</body>
+</html>
