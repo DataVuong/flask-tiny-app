@@ -14,8 +14,16 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    is_blocked = db.Column(db.Boolean, default=False)  # Thêm trạng thái khóa
+    is_blocked = db.Column(db.Boolean, default=False)  # Trạng thái khóa user
     role = db.Column(db.String(10), default='user')  # 'admin' hoặc 'user'
+    posts = db.relationship('Post', backref='author', lazy=True)
+
+# Model Post
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -24,7 +32,10 @@ def load_user(user_id):
 # Routes
 @app.route('/')
 def home():
-    posts = [{"title": "Bài viết 1", "content": "Nội dung bài viết 1"}]
+    if current_user.is_authenticated:
+        posts = Post.query.filter_by(user_id=current_user.id).all()  # Chỉ lấy bài viết của user
+    else:
+        posts = []
     return render_template('index.html', posts=posts)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -60,6 +71,30 @@ def register():
 @login_required
 def logout():
     logout_user()
+    return redirect(url_for('home'))
+
+# Thêm bài viết
+@app.route('/add_post', methods=['POST'])
+@login_required
+def add_post():
+    title = request.form['title']
+    content = request.form['content']
+    if title and content:
+        post = Post(title=title, content=content, user_id=current_user.id)
+        db.session.add(post)
+        db.session.commit()
+        flash('Bài viết đã được thêm!')
+    return redirect(url_for('home'))
+
+# Xóa nhiều bài viết cùng lúc
+@app.route('/delete_posts', methods=['POST'])
+@login_required
+def delete_posts():
+    post_ids = request.form.getlist('post_ids')  # Lấy danh sách ID từ form
+    if post_ids:
+        Post.query.filter(Post.id.in_(post_ids), Post.user_id == current_user.id).delete(synchronize_session=False)
+        db.session.commit()
+        flash('Đã xóa các bài viết thành công!')
     return redirect(url_for('home'))
 
 # Trang Admin
@@ -105,7 +140,7 @@ def reset_password(user_id):
     
     return redirect(url_for('admin'))
 
-# Tạo admin mặc định
+# Tạo admin mặc định và khởi tạo database
 with app.app_context():
     db.create_all()
     if not User.query.filter_by(username='admin').first():

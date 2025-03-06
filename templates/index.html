@@ -1,26 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #007bff !important;
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+        }
+        .card {
+            border: 1px solid #dee2e6;
+            transition: 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+        .alert {
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
-                <a class="navbar-brand" href="{{ url_for('home') }}">Blog</a>
+                <a class="navbar-brand" href="{{ url_for('home') }}">📖 Blog</a>
                 <div class="collapse navbar-collapse">
                     <ul class="navbar-nav ms-auto">
                         {% if current_user.is_authenticated %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('logout') }}">Đăng xuất</a>
+                                <a class="nav-link" href="{{ url_for('logout') }}">🚪 Đăng xuất</a>
                             </li>
                         {% else %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('login') }}">Đăng nhập</a>
+                                <a class="nav-link" href="{{ url_for('login') }}">🔑 Đăng nhập</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('register') }}">Đăng ký</a>
+                                <a class="nav-link" href="{{ url_for('register') }}">📝 Đăng ký</a>
                             </li>
                         {% endif %}
                     </ul>
@@ -28,15 +60,57 @@
             </div>
         </nav>
 
-        <h1 class="mt-4">Blog</h1>
-        {% for post in posts %}
-            <div class="card my-3">
+        <h1 class="mt-4 text-center text-primary">📝 Blog của bạn</h1>
+
+        <!-- Hiển thị thông báo -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-info">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if current_user.is_authenticated %}
+            <!-- Form thêm bài viết -->
+            <div class="card my-4">
                 <div class="card-body">
-                    <h5 class="card-title">{{ post.title }}</h5>
-                    <p class="card-text">{{ post.content }}</p>
+                    <h5 class="card-title text-primary">✍️ Thêm bài viết mới</h5>
+                    <form method="POST" action="{{ url_for('add_post') }}">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" name="title" placeholder="📌 Tiêu đề" required>
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" name="content" placeholder="📝 Nội dung" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Đăng bài</button>
+                    </form>
                 </div>
             </div>
-        {% endfor %}
+
+            <!-- Form xóa nhiều bài viết -->
+            <form method="POST" action="{{ url_for('delete_posts') }}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="text-danger">📌 Bài viết của bạn</h3>
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa các bài viết đã chọn?');">
+                        🗑️ Xóa đã chọn
+                    </button>
+                </div>
+                {% for post in posts %}
+                    <div class="card my-3">
+                        <div class="card-body">
+                            <input type="checkbox" name="post_ids" value="{{ post.id }}">
+                            <h5 class="card-title text-primary d-inline">{{ post.title }}</h5>
+                            <p class="card-text">{{ post.content }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </form>
+        {% else %}
+            <p class="mt-4 text-center">🔒 Vui lòng <a href="{{ url_for('login') }}" class="text-primary">đăng nhập</a> để quản lý bài viết.</p>
+        {% endif %}
     </div>
 </body>
 </html>
