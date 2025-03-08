@@ -12,3 +12,4 @@
    ```bash
    git clone https://github.com/[username]/flask-tiny-app.git
    cd flask-tiny-app
+2.Tải code trên này về và chạy
